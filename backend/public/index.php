@@ -41,22 +41,45 @@ try {
         try {
             $pdo = Database::connection();
             
-            // Tìm file SQL chứa schema/dữ liệu mẫu trong dự án
-            $sqlPath = __DIR__ . '/../database/schema.sql';
-            if (!file_exists($sqlPath)) {
-                $sqlPath = __DIR__ . '/../schema.sql';
-            }
-            if (!file_exists($sqlPath)) {
-                $sqlPath = __DIR__ . '/../database.sql';
+            // Danh sách tất cả các vị trí tiềm năng của file SQL trong cấu trúc thư mục Render
+            $searchPaths = [
+                __DIR__ . '/../database/schema.sql',
+                __DIR__ . '/../database/init.sql',
+                __DIR__ . '/../database/database.sql',
+                __DIR__ . '/../schema.sql',
+                __DIR__ . '/../init.sql',
+                __DIR__ . '/../database.sql',
+                dirname(__DIR__, 2) . '/database/schema.sql',
+                dirname(__DIR__, 2) . '/schema.sql'
+            ];
+
+            $targetFile = null;
+            foreach ($searchPaths as $filePath) {
+                if (file_exists($filePath)) {
+                    $targetFile = $filePath;
+                    break;
+                }
             }
 
-            if (file_exists($sqlPath)) {
-                $sql = file_get_contents($sqlPath);
-                $pdo->exec($sql);
-                Response::json(['message' => 'Database imported successfully from ' . basename($sqlPath)]);
-            } else {
-                Response::json(['error' => 'SQL file not found in backend directory.'], 404);
+            if (!$targetFile) {
+                Response::json([
+                    'error' => 'SQL schema file not found in any expected directory.',
+                    'checked_paths' => array_map('realpath', array_filter($searchPaths, 'file_exists')) ?: $searchPaths
+                ], 404);
+                exit();
             }
+
+            $sqlContent = file_get_contents($targetFile);
+
+            // Bật thuộc tính cho phép thực thi nhiều câu lệnh SQL cùng lúc
+            $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+            $pdo->exec($sqlContent);
+
+            Response::json([
+                'status' => 'success',
+                'message' => 'Database imported successfully!',
+                'source_file' => basename($targetFile)
+            ]);
         } catch (Throwable $e) {
             Response::error($e->getMessage(), 500, 'SETUP_ERROR');
         }
@@ -227,7 +250,6 @@ try {
 } catch (DomainException $e) {
     Response::error($e->getMessage(), 422, 'VALIDATION_ERROR');
 } catch (PDOException $e) {
-    // Trả về thông báo lỗi thực tế từ MySQL để dễ truy vết thay vì chuỗi chung chung
     Response::error($e->getMessage(), 409, 'DATABASE_ERROR');
 } catch (RuntimeException $e) {
     Response::error($e->getMessage(), 409, 'BUSINESS_RULE_ERROR');
