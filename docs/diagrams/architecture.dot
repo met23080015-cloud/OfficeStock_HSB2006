@@ -1,0 +1,12 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", fontname="Arial", nodesep=.4, ranksep=.45, margin=.05];
+  node [shape=box, style="rounded,filled", fillcolor="#F8FAFC", color="#AAB8D0", fontname="Arial", fontsize=10, margin=".16,.09"];
+  edge [color="#4B638B", fontname="Arial", fontsize=8];
+  browser [label="Browser\n3 roles", fillcolor="#EEF3FF"];
+  front [label="Vercel Frontend\nResponsive UI + API integration\nNo embedded business data", fillcolor="#E9F1FF"];
+  api [label="PHP 8.x JSON API\nAuth + Roles + CRUD + Workflow\nValidation + Reporting", fillcolor="#ECFDF3"];
+  db [label="Online MySQL/MariaDB\nPK/FK + Sessions + Transactions\nInventory + Requests + History", fillcolor="#FFF7E8"];
+  browser->front [label="HTTPS"];
+  front->api [label="HTTPS JSON + Bearer token"];
+  api->db [label="PDO prepared statements"];
+}

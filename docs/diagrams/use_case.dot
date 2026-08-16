@@ -1,0 +1,37 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", fontname="Arial", nodesep=0.35, ranksep=0.45, margin=0.05];
+  node [fontname="Arial", fontsize=10];
+  edge [fontname="Arial", fontsize=8, color="#4B638B"];
+
+  admin [shape=box, style="rounded,filled", fillcolor="#EEF3FF", label="ADMIN_MANAGER"];
+  warehouse [shape=box, style="rounded,filled", fillcolor="#ECFDF3", label="WAREHOUSE"];
+  employee [shape=box, style="rounded,filled", fillcolor="#FFF7E8", label="EMPLOYEE"];
+  {rank=same; admin; warehouse; employee;}
+
+  subgraph cluster_system {
+    label="OfficeStock";
+    color="#CAD3E1"; style="rounded";
+    login [shape=ellipse, label="Login / Logout"];
+    dash [shape=ellipse, label="Dashboard"];
+    prod [shape=ellipse, label="Product CRUD"];
+    supp [shape=ellipse, label="Supplier CRUD"];
+    inv [shape=ellipse, label="Inventory / Low Stock"];
+    stock [shape=ellipse, label="Stock In / Out"];
+    creq [shape=ellipse, label="Create Request"];
+    own [shape=ellipse, label="Track Own Requests"];
+    review [shape=ellipse, label="Approve / Reject"];
+    issue [shape=ellipse, label="Issue Request"];
+    tx [shape=ellipse, label="Transactions"];
+    report [shape=ellipse, label="Reporting"];
+    users [shape=ellipse, label="User Management"];
+
+    {rank=same; login; dash; inv;}
+    {rank=same; prod; supp; stock;}
+    {rank=same; creq; own; review;}
+    {rank=same; issue; tx; report; users;}
+  }
+
+  admin -> login; admin -> dash; admin -> prod; admin -> supp; admin -> inv; admin -> review; admin -> tx; admin -> report; admin -> users;
+  warehouse -> login; warehouse -> dash; warehouse -> inv; warehouse -> stock; warehouse -> issue; warehouse -> tx;
+  employee -> login; employee -> dash; employee -> creq; employee -> own;
+}

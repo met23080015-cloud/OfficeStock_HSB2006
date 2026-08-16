@@ -1,0 +1,17 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", fontname="Arial"];
+  node [shape=box, style="rounded,filled", fontname="Arial", color="#AAB8D0", margin="0.18"];
+  edge [color="#4B638B", fontname="Arial"];
+
+  github [label="GitHub Repository\nProgressive commits + README + Project Board", fillcolor="#F8FAFC"];
+  vercel [label="Vercel\nfrontend/ root\nnpm run build -> dist", fillcolor="#EEF3FF"];
+  php [label="PHP Web Service\nbackend/ Dockerfile\nPublic /health + /api/*", fillcolor="#ECFDF3"];
+  mysql [label="Online MySQL/MariaDB\nImport officestock_production.sql", fillcolor="#FFF7E8"];
+  browser [label="Lecturer Browser\nPublic URL", fillcolor="#FDECEC"];
+
+  github -> vercel [label="deploy frontend"];
+  github -> php [label="deploy backend"];
+  php -> mysql [label="DB env vars"];
+  browser -> vercel [label="open application"];
+  vercel -> php [label="API_BASE_URL"];
+}

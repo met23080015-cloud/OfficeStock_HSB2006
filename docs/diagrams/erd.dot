@@ -1,0 +1,32 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", fontname="Arial", nodesep=.3, ranksep=.4, margin=.04];
+  node [shape=record, style="filled", fillcolor="#F8FAFC", color="#AAB8D0", fontname="Arial", fontsize=8, margin=".05,.03"];
+  edge [color="#4B638B", arrowsize=.6];
+
+  roles [label="{roles|id PK|code UQ}"];
+  deps [label="{departments|id PK|name UQ}"];
+  users [label="{users|id PK|role_id FK|department_id FK|email UQ|password_hash}"];
+  sessions [label="{auth_sessions|id PK|user_id FK|token_hash UQ|expires_at}"];
+  audit [label="{audit_logs|id PK|user_id FK|action}"];
+
+  cats [label="{categories|id PK|name UQ}"];
+  sups [label="{suppliers|id PK|name UQ|status}"];
+  products [label="{products|id PK|sku UQ|category_id FK|supplier_id FK|minimum_stock}"];
+  inv [label="{inventory|product_id PK/FK|quantity}"];
+
+  req [label="{stationery_requests|id PK|requester_id FK|status|reviewed_by FK|issued_by FK}"];
+  reqi [label="{request_items|id PK|request_id FK|product_id FK|quantity}"];
+  tx [label="{inventory_transactions|id PK|type|request_id FK|department_id FK|created_by FK}"];
+  txi [label="{inventory_transaction_items|id PK|transaction_id FK|product_id FK|quantity}"];
+
+  {rank=same; roles; deps; cats; sups;}
+  {rank=same; users; products;}
+  {rank=same; sessions; audit; inv;}
+  {rank=same; req; tx;}
+  {rank=same; reqi; txi;}
+
+  roles->users; deps->users; users->sessions; users->audit;
+  cats->products; sups->products; products->inv;
+  users->req; req->reqi; products->reqi;
+  req->tx; deps->tx; users->tx; tx->txi; products->txi;
+}

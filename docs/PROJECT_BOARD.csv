@@ -1,0 +1,13 @@
+Task ID,Task,Owner,Support,Status,Evidence
+T01,Requirements and production scope,Đăng,Duy,Review,docs/REQUIREMENTS.md
+T02,PHP API and database review,Trung,Đăng,Review,backend/
+T03,Frontend UI/UX review,Huyền,Đăng,Review,frontend/
+T04,Request Approval Issue workflow review,Duy,Trung,Review,backend/app/Services/RequestService.php
+T05,Security and production test execution,Vinh,Trung,To Do,docs/PRODUCTION_TEST_PLAN.md
+T06,System diagrams,Duy,Đăng,Review,docs/diagrams/
+T07,Database schema and data dictionary,Trung,Duy,Review,backend/database/officestock_production.sql
+T08,Vercel deployment,Đăng,Huyền,Blocked,Actual Vercel URL
+T09,PHP backend deployment,Đăng,Trung,Blocked,Actual backend URL /health
+T10,Online database deployment,Trung,Đăng,Blocked,Production DB evidence
+T11,Production workflow test,Duy,Vinh,Blocked,TC09-TC13 evidence
+T12,Final report evidence update,Đăng,All,To Do,Final Report
