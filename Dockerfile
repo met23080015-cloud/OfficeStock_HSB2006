@@ -1,11 +1,19 @@
 FROM php:8.2-apache
-RUN docker-php-ext-install pdo pdo_mysql mysqli
 
+RUN docker-php-ext-install pdo pdo_mysql mysqli
 RUN a2enmod rewrite
 
-# Cho phép tự động xem danh sách file trong thư mục
-RUN sed -i 's/Options Indexes FollowSymLinks/Options Indexes FollowSymLinks ExecCGI/' /etc/apache2/apache2.conf
-RUN echo "<Directory /var/www/html>\n  Options +Indexes +FollowSymLinks\n  AllowOverride All\n  Require all granted\n</Directory>" >> /etc/apache2/apache2.conf
+# Cấu hình Override cho thư mục backend
+RUN echo '<Directory /var/www/html/backend>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' > /etc/apache2/conf-available/override.conf \
+    && a2enconf override
+
+# Ép DocumentRoot trỏ thẳng vào thư mục backend
+ENV APACHE_DOCUMENT_ROOT /var/www/html/backend
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
 COPY . /var/www/html/
 EXPOSE 80
