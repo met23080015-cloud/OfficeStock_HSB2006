@@ -41,44 +41,49 @@ try {
         try {
             $pdo = Database::connection();
             
-            // Danh sách tất cả các vị trí tiềm năng của file SQL trong cấu trúc thư mục Render
-            $searchPaths = [
-                __DIR__ . '/../database/schema.sql',
-                __DIR__ . '/../database/init.sql',
-                __DIR__ . '/../database/database.sql',
-                __DIR__ . '/../schema.sql',
-                __DIR__ . '/../init.sql',
-                __DIR__ . '/../database.sql',
-                dirname(__DIR__, 2) . '/database/schema.sql',
-                dirname(__DIR__, 2) . '/schema.sql'
+            // Tự động quét toàn bộ các file .sql trong các thư mục khả thi
+            $targetDirectories = [
+                dirname(__DIR__),               // Thư mục backend/
+                dirname(__DIR__) . '/database',      // Thư mục backend/database/
+                dirname(__DIR__) . '/sql',           // Thư mục backend/sql/
+                dirname(__DIR__, 2),            // Thư mục gốc dự án
+                dirname(__DIR__, 2) . '/database',   // Thư mục database/ ở gốc dự án
             ];
 
-            $targetFile = null;
-            foreach ($searchPaths as $filePath) {
-                if (file_exists($filePath)) {
-                    $targetFile = $filePath;
-                    break;
+            $foundSqlFiles = [];
+            foreach ($targetDirectories as $dir) {
+                if (is_dir($dir)) {
+                    $files = glob($dir . '/*.sql');
+                    if ($files !== false && count($files) > 0) {
+                        $foundSqlFiles = array_merge($foundSqlFiles, $files);
+                    }
                 }
             }
 
-            if (!$targetFile) {
+            // Loại bỏ các đường dẫn trùng lặp
+            $foundSqlFiles = array_unique($foundSqlFiles);
+
+            if (empty($foundSqlFiles)) {
                 Response::json([
-                    'error' => 'SQL schema file not found in any expected directory.',
-                    'checked_paths' => array_map('realpath', array_filter($searchPaths, 'file_exists')) ?: $searchPaths
+                    'error' => 'No .sql file found anywhere in the backend/project directory.',
+                    'scanned_directories' => array_values(array_filter($targetDirectories, 'is_dir'))
                 ], 404);
                 exit();
             }
 
+            // Lấy file SQL đầu tiên tìm được
+            $targetFile = reset($foundSqlFiles);
             $sqlContent = file_get_contents($targetFile);
 
-            // Bật thuộc tính cho phép thực thi nhiều câu lệnh SQL cùng lúc
+            // Bật thuộc tính cho phép thực thi đa câu lệnh SQL cùng lúc
             $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
             $pdo->exec($sqlContent);
 
             Response::json([
                 'status' => 'success',
                 'message' => 'Database imported successfully!',
-                'source_file' => basename($targetFile)
+                'source_file' => basename($targetFile),
+                'file_path' => $targetFile
             ]);
         } catch (Throwable $e) {
             Response::error($e->getMessage(), 500, 'SETUP_ERROR');
