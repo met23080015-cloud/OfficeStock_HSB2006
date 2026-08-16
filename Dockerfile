@@ -3,13 +3,9 @@ RUN docker-php-ext-install pdo pdo_mysql mysqli
 
 RUN a2enmod rewrite
 
-# Cho phép liệt kê thư mục và cấu hình đường dẫn frontend
-ENV APACHE_DOCUMENT_ROOT /var/www/html/frontend
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/conf-available/*.conf
-
-# Bật DirectoryIndex mở rộng cho các file php/html khác
-RUN echo "DirectoryIndex index.php index.html login.php home.php main.php" >> /etc/apache2/apache2.conf
+# Cho phép tự động xem danh sách file trong thư mục
+RUN sed -i 's/Options Indexes FollowSymLinks/Options Indexes FollowSymLinks ExecCGI/' /etc/apache2/apache2.conf
+RUN echo "<Directory /var/www/html>\n  Options +Indexes +FollowSymLinks\n  AllowOverride All\n  Require all granted\n</Directory>" >> /etc/apache2/apache2.conf
 
 COPY . /var/www/html/
 EXPOSE 80
