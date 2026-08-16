@@ -31,6 +31,7 @@ try {
         } catch (Throwable $e) {
             Response::error('Service is running but database is unavailable.', 503, 'DB_UNAVAILABLE', [
                 'service'=>'OfficeStock PHP API',
+                'exception_message' => $e->getMessage() // 💡 In trực tiếp chi tiết lỗi MySQL ra màn hình
             ]);
         }
     }
@@ -205,7 +206,7 @@ try {
 } catch (RuntimeException $e) {
     Response::error($e->getMessage(), 409, 'BUSINESS_RULE_ERROR');
 } catch (Throwable $e) {
-    $debug = Env::bool('APP_DEBUG', false);
+    $debug = Env::bool('APP_DEBUG', true); // 💡 Bật hiển thị lỗi chi tiết
     Response::error(
         'Unexpected server error.',
         500,
