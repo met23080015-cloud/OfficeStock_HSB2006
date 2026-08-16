@@ -31,10 +31,38 @@ try {
         } catch (Throwable $e) {
             Response::error('Service is running but database is unavailable.', 503, 'DB_UNAVAILABLE', [
                 'service'=>'OfficeStock PHP API',
-                'exception_message' => $e->getMessage() // 💡 In trực tiếp chi tiết lỗi MySQL ra màn hình
+                'exception_message' => $e->getMessage()
             ]);
         }
     }
+
+    // --- ROUTE KHỞI TẠO DỮ LIỆU TỰ ĐỘNG CHO AIVEN MYSQL ---
+    if ($method === 'GET' && $path === '/setup-db') {
+        try {
+            $pdo = Database::connection();
+            
+            // Tìm file SQL chứa schema/dữ liệu mẫu trong dự án
+            $sqlPath = __DIR__ . '/../database/schema.sql';
+            if (!file_exists($sqlPath)) {
+                $sqlPath = __DIR__ . '/../schema.sql';
+            }
+            if (!file_exists($sqlPath)) {
+                $sqlPath = __DIR__ . '/../database.sql';
+            }
+
+            if (file_exists($sqlPath)) {
+                $sql = file_get_contents($sqlPath);
+                $pdo->exec($sql);
+                Response::json(['message' => 'Database imported successfully from ' . basename($sqlPath)]);
+            } else {
+                Response::json(['error' => 'SQL file not found in backend directory.'], 404);
+            }
+        } catch (Throwable $e) {
+            Response::error($e->getMessage(), 500, 'SETUP_ERROR');
+        }
+        exit();
+    }
+    // ---------------------------------------------------
 
     if ($method === 'POST' && $path === '/api/auth/login') {
         $body = Request::json();
@@ -199,14 +227,12 @@ try {
 } catch (DomainException $e) {
     Response::error($e->getMessage(), 422, 'VALIDATION_ERROR');
 } catch (PDOException $e) {
-    $msg = str_contains(strtolower($e->getMessage()), 'duplicate')
-        ? 'A unique value already exists.'
-        : 'Database operation failed.';
-    Response::error($msg, 409, 'DATABASE_ERROR');
+    // Trả về thông báo lỗi thực tế từ MySQL để dễ truy vết thay vì chuỗi chung chung
+    Response::error($e->getMessage(), 409, 'DATABASE_ERROR');
 } catch (RuntimeException $e) {
     Response::error($e->getMessage(), 409, 'BUSINESS_RULE_ERROR');
 } catch (Throwable $e) {
-    $debug = Env::bool('APP_DEBUG', true); // 💡 Bật hiển thị lỗi chi tiết
+    $debug = Env::bool('APP_DEBUG', true);
     Response::error(
         'Unexpected server error.',
         500,
