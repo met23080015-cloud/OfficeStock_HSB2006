@@ -21,13 +21,23 @@ final class Database
 
         $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $host, $port, $name);
 
-        self::$pdo = new PDO($dsn, $user, (string)$pass, [
+        $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::MYSQL_ATTR_SSL_CA => true,
-            PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-        ]);
+        ];
+
+        // Đọc chứng chỉ SSL từ đường dẫn Secret File của Render
+        $caPath = '/etc/secrets/aiven-ca.pem';
+        if (file_exists($caPath)) {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = $caPath;
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        } else {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = true;
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+
+        self::$pdo = new PDO($dsn, $user, (string)$pass, $options);
 
         return self::$pdo;
     }
