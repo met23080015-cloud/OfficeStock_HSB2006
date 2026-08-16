@@ -41,38 +41,31 @@ try {
         try {
             $pdo = Database::connection();
             
-            // Tự động quét toàn bộ các file .sql trong các thư mục khả thi
-            $targetDirectories = [
-                dirname(__DIR__),               // Thư mục backend/
-                dirname(__DIR__) . '/database',      // Thư mục backend/database/
-                dirname(__DIR__) . '/sql',           // Thư mục backend/sql/
-                dirname(__DIR__, 2),            // Thư mục gốc dự án
-                dirname(__DIR__, 2) . '/database',   // Thư mục database/ ở gốc dự án
+            // Tìm chính xác file schema.sql trong thư mục backend (ngang hàng với app, public, database)
+            $searchPaths = [
+                dirname(__DIR__) . '/schema.sql',               // /var/www/html/schema.sql (Vị trí thực tế của file bạn vừa tạo)
+                __DIR__ . '/../schema.sql',
+                __DIR__ . '/../database/schema.sql',
+                __DIR__ . '/../database/init.sql',
+                __DIR__ . '/../init.sql',
             ];
 
-            $foundSqlFiles = [];
-            foreach ($targetDirectories as $dir) {
-                if (is_dir($dir)) {
-                    $files = glob($dir . '/*.sql');
-                    if ($files !== false && count($files) > 0) {
-                        $foundSqlFiles = array_merge($foundSqlFiles, $files);
-                    }
+            $targetFile = null;
+            foreach ($searchPaths as $filePath) {
+                if (file_exists($filePath)) {
+                    $targetFile = $filePath;
+                    break;
                 }
             }
 
-            // Loại bỏ các đường dẫn trùng lặp
-            $foundSqlFiles = array_unique($foundSqlFiles);
-
-            if (empty($foundSqlFiles)) {
+            if (!$targetFile) {
                 Response::json([
-                    'error' => 'No .sql file found anywhere in the backend/project directory.',
-                    'scanned_directories' => array_values(array_filter($targetDirectories, 'is_dir'))
+                    'error' => 'SQL schema file not found in any expected directory.',
+                    'checked_paths' => array_map(fn($p) => realpath($p) ?: $p, $searchPaths)
                 ], 404);
                 exit();
             }
 
-            // Lấy file SQL đầu tiên tìm được
-            $targetFile = reset($foundSqlFiles);
             $sqlContent = file_get_contents($targetFile);
 
             // Bật thuộc tính cho phép thực thi đa câu lệnh SQL cùng lúc
